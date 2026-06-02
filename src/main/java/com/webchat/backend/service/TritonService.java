@@ -23,12 +23,14 @@ public class TritonService {
     private final ObjectMapper objectMapper;
     private final ExecutorService executorService;
     private final String tritonUrl;
+    private final String apiKey;
 
-    public TritonService(@Value("${ai.triton.url}") String tritonUrl) {
+    public TritonService(@Value("${ai.triton.url}") String tritonUrl, @Value("${ai.triton.key:}") String apiKey) {
         this.restClient = RestClient.builder().build();
         this.objectMapper = new ObjectMapper();
         this.executorService = Executors.newVirtualThreadPerTaskExecutor(); // Java 21 Virtual Threads
         this.tritonUrl = tritonUrl;
+        this.apiKey = apiKey;
     }
 
     public void streamChat(List<Map<String, String>> messages, Float temperature, Integer maxTokens, SseEmitter emitter, Runnable onComplete) {
@@ -42,10 +44,15 @@ public class TritonService {
                         "stream", true
                 );
 
-                restClient.post()
+                var req = restClient.post()
                         .uri(tritonUrl)
-                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                        .body(requestBody)
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON);
+                
+                if (apiKey != null && !apiKey.isEmpty()) {
+                    req.header("Authorization", "Bearer " + apiKey);
+                }
+                
+                req.body(requestBody)
                         .exchange((clientRequest, clientResponse) -> {
                             if (!clientResponse.getStatusCode().is2xxSuccessful()) {
                                 emitter.completeWithError(new RuntimeException("Triton API Error: " + clientResponse.getStatusCode()));
