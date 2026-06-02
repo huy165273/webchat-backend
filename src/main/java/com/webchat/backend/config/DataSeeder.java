@@ -30,7 +30,7 @@ public class DataSeeder implements CommandLineRunner {
             log.warn("max_tokens column already exists or could not be added");
         }
 
-        String testEmail = "huynn@gmail.com";
+        String testEmail = "admin@gmail.com";
         if (userRepository.findByEmail(testEmail).isEmpty()) {
             log.info("Test environment detected. Seeding default user: {}", testEmail);
             User user = User.builder()
@@ -39,7 +39,7 @@ public class DataSeeder implements CommandLineRunner {
                     .passwordHash(passwordEncoder.encode("123456"))
                     .build();
             userRepository.save(user);
-            log.info("Default test user created. Email: {} | Password: password123", testEmail);
+            log.info("Default test user created. Email: {} | Password: 123456", testEmail);
         }
     }
 }
